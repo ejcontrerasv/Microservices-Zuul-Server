@@ -1,9 +1,12 @@
 package com.bandido.app.zuul.filters;
 
+import java.util.Enumeration;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 
 import com.netflix.zuul.ZuulFilter;
@@ -14,6 +17,7 @@ import com.netflix.zuul.exception.ZuulException;
 public class PreTiempoTranscurridoFilter extends ZuulFilter{
 
 	private static Logger log = LoggerFactory.getLogger(PreTiempoTranscurridoFilter.class);
+	
 	@Override
 	public boolean shouldFilter() {
 		return true;
@@ -21,24 +25,36 @@ public class PreTiempoTranscurridoFilter extends ZuulFilter{
 
 	@Override
 	public Object run() throws ZuulException {
-		RequestContext ctx = RequestContext.getCurrentContext();
+		RequestContext ctx = RequestContext.getCurrentContext();  
 		HttpServletRequest request = ctx.getRequest();
-		
-		log.info(String.format("%s request enrutado a %s", request.getMethod(), request.getRequestURL().toString()));
-		
 		Long tiempoInicio = System.currentTimeMillis();
 		request.setAttribute("tiempoInicio", tiempoInicio);
+		
+        StringBuilder strLog = new StringBuilder();
+        strLog.append("\n------ NUEVA PETICION ------\n");                     
+        strLog.append(String.format("Server: %s Metodo: %s Path: %s \n",ctx.getRequest().getServerName()                
+                   ,ctx.getRequest().getMethod(),
+                   ctx.getRequest().getRequestURI()));
+        Enumeration<String> enume= ctx.getRequest().getHeaderNames();
+        String header;
+        while (enume.hasMoreElements())
+        {
+            header=enume.nextElement();
+            strLog.append(String.format("Headers: %s = %s \n",header,ctx.getRequest().getHeader(header)));                 
+        };         
+        log.info(strLog.toString());
+        
 		return null;
 	}
 
 	@Override
 	public String filterType() {
-		return "pre";
+		return FilterConstants.PRE_TYPE;
 	}
 
 	@Override
 	public int filterOrder() {
-		return 1;
+		return FilterConstants.DEBUG_FILTER_ORDER;
 	}
 
 }
